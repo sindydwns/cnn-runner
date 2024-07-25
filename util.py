@@ -65,7 +65,7 @@ class Runner(torch.nn.Module):
                 "loss": math.floor(loss * 100000) / 100000,
                 "acc": math.floor(acc * 100000) / 100000,
             } | record)
-            print(f"epoch: {epoch + 1}; loss: {loss:.3f}; acc: {acc:.3f}")
+            print(f"epoch: {epoch + 1}; loss: {loss:.5f}; acc: {acc:.5f}")
             time.sleep(1) # 중간에 멈출 수 있게 위해 약간의 시간을 둠
             
     def test(self,
