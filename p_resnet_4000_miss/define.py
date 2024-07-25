@@ -19,7 +19,7 @@ def transform():
 def create_model():
     model = models.resnet152(weights=torchvision.models.ResNet152_Weights.DEFAULT)
     model.fc = nn.Sequential(
-        nn.Linear(2048, 4)
+        nn.Linear(2048, 5)
     )
     return model
 
