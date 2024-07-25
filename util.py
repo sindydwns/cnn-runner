@@ -38,6 +38,8 @@ class Runner(torch.nn.Module):
             train_data: Iterator[tuple[torch.Tensor, torch.Tensor]]):
         self.model.train(True)
         loss_total = 0
+        corr = 0
+        total = 0
         for data, target in tqdm(train_data):
             data, target = data.to(self.device), target.to(self.device)
             optimizer.zero_grad()
@@ -47,7 +49,10 @@ class Runner(torch.nn.Module):
             loss.backward()
             optimizer.step()
             self.c_loss = loss.item()
-        return loss_total / len(train_data)
+            result = torch.max(pred, 1)[1]
+            corr += (result == target.to(self.device)).sum().item()
+            total += len(result)
+        return loss_total / len(train_data), corr / total
     
     def run(self,
             criterion: torch.nn.Module,
@@ -57,10 +62,12 @@ class Runner(torch.nn.Module):
             epochs: int = 1,
             record: dict = {}):
         for epoch in range(epochs):
-            loss = self._train_one_epoch(criterion, optimizer, train_data)
-            acc = self.test(test_data)
-            self.writer.add_scalar('loss', loss, self.counter)
-            self.writer.add_scalar('acc', acc, self.counter)
+            loss, acc = self._train_one_epoch(criterion, optimizer, train_data)
+            val_loss, val_acc = self.test(test_data, criterion)
+            self.writer.add_scalar('Train/Loss', loss, self.counter)
+            self.writer.add_scalar('Train/Acc', acc, self.counter)
+            self.writer.add_scalar('Valid/Loss', val_loss, self.counter)
+            self.writer.add_scalar('Valid/Acc', val_acc, self.counter)
             self.counter += 1
             self.learn.append({
                 "epoch": self.counter,
@@ -68,27 +75,34 @@ class Runner(torch.nn.Module):
                 "optimizer": type(optimizer).__name__,
                 "loss": math.floor(loss * 100000) / 100000,
                 "acc": math.floor(acc * 100000) / 100000,
+                "val_loss": math.floor(val_loss * 100000) / 100000,
+                "val_acc": math.floor(val_acc * 100000) / 100000,
             } | record)
-            print(f"epoch: {epoch + 1}; loss: {loss:.5f}; acc: {acc:.5f}")
+            print(f"epoch: {epoch + 1}; loss: {loss:.5f}; acc: {acc:.5f}; val_loss: {val_loss:.5f}; val_acc: {val_acc:.5f}")
             time.sleep(1) # 중간에 멈출 수 있게 위해 약간의 시간을 둠
             
     def test(self,
             iterator: Iterator[tuple[torch.Tensor, torch.Tensor]],
+            criterion: torch.nn.Module,
             action: callable = None):
         self.model.train(False)
         with torch.no_grad():
             total = 0
             corr = 0
+            loss_total = 0
             for data, target in tqdm(iterator):
                 data, target = data.to(self.device), target.to(self.device)
                 pred: torch.Tensor = self.model(data)
+                loss: torch.Tensor = criterion(pred, target)
+                loss_total += loss.item()
                 result = torch.max(pred, 1)[1]
                 if action is not None:
                     action(data, target, result)
                 total += len(result)
                 corr += (result == target.to(self.device)).sum().item()
             acc = corr / total
-        return acc
+            loss = loss_total / len(iterator)
+        return loss, acc
 
     def save(self, path=None):
         if path == None:
@@ -97,7 +111,7 @@ class Runner(torch.nn.Module):
         torch.save(self.model.state_dict(), self.default_dir + "/" + path)
         with open(self.record_file_path, "a", encoding="utf-8") as file:
             if os.path.getsize(self.record_file_path) == 0:
-                 file.write("date,base,tag,model,criterion,optimizer,lr,epoch,loss,acc,memo\n")
+                 file.write("date,base,tag,model,criterion,optimizer,lr,epoch,loss,acc,val_loss,val_acc,memo\n")
             for v in self.learn:
                 lst = []
                 lst.append(datetime.now().strftime("%m%d_%H%M%S"))   #0
@@ -110,7 +124,9 @@ class Runner(torch.nn.Module):
                 lst.append(str(f'{v["epoch"]:5}'))                  #7
                 lst.append(str(f'{v["loss"]:.5f}'))                 #8
                 lst.append(str(f'{v["acc"]:.5f}'))                  #9
-                lst.append(str(f'"{v["memo"]}"'))                   #10
+                lst.append(str(f'{v["val_loss"]:.5f}'))             #10
+                lst.append(str(f'{v["val_acc"]:.5f}'))              #11
+                lst.append(str(f'"{v["memo"]}"'))                   #12
                 file.write(",".join(lst) + "\n")
         self.base = path.split("/")[-1]
         self.learn.clear()
@@ -241,3 +257,13 @@ def show2(
     plt.imshow(img)
     plt.title(title)
     plt.show()
+
+
+
+
+
+############################################################################
+
+
+
+
