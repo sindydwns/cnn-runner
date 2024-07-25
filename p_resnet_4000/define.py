@@ -25,3 +25,6 @@ def create_model():
 
 def model_desc():
     return "resnet152"
+
+def get_datafolder():
+    return "./dataset_4000"

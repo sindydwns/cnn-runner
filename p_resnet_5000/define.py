@@ -17,11 +17,14 @@ def transform():
 ])
 
 def create_model():
-    model = models.efficientnet_b7(weights=torchvision.models.EfficientNet_B7_Weights.DEFAULT)
-    model.classifier = nn.Sequential(
-        nn.Linear(2560, 5),
+    model = models.resnet152(weights=torchvision.models.ResNet152_Weights.DEFAULT)
+    model.fc = nn.Sequential(
+        nn.Linear(2048, 5)
     )
     return model
 
 def model_desc():
-    return "efficientnet_b7 with low lr"
+    return "resnet152"
+
+def get_datafolder():
+    return "./dataset_5000"

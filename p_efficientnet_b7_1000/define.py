@@ -26,3 +26,6 @@ def create_model():
 
 def model_desc():
     return "efficientnet_b7 dataset angry1000 neutral1000 shock1000 smile1000"
+
+def get_datafolder():
+    return "./dataset_4_1000"
