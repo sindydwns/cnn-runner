@@ -88,7 +88,8 @@ class Runner(torch.nn.Module):
 
     def save(self, path=None):
         if path == None:
-            path = datetime.now().strftime(f"m_%m%d_%H%M%S_{str(uuid4()).split("-")[0]}.pth")
+            path = datetime.now().strftime(f"m_%m%d_%H%M%S")
+            path += f"{str(uuid4()).split("-")[0]}.pth"
         torch.save(self.model.state_dict(), self.default_dir + "/" + path)
         with open(self.record_file_path, "a", encoding="utf-8") as file:
             if os.path.getsize(self.record_file_path) == 0:
