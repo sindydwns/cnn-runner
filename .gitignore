@@ -1,7 +1,9 @@
 *.pth
 *.csv
 dataset/
+*dataset*/
 runs/
+*.jpg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
