@@ -133,12 +133,12 @@ class Runner(torch.nn.Module):
                 lst.append(str(f'"{v["model"]}"'))                  #3
                 lst.append(str(f'{v["criterion"]}'))                #4
                 lst.append(str(f'{v["optimizer"]}'))                #5
-                lst.append(str(f'{v["lr"]:.5f}'))                    #6
-                lst.append(str(f'{v["epoch"]:5f}'))                  #7
-                lst.append(str(f'{v["loss"]:.5f}'))                 #8
-                lst.append(str(f'{v["acc"]:.5f}'))                  #9
-                lst.append(str(f'{v["val_loss"]:.5f}'))             #10
-                lst.append(str(f'{v["val_acc"]:.5f}'))              #11
+                lst.append(str(f'{v["lr"]:.7f}'))                    #6
+                lst.append(str(f'{v["epoch"]:7f}'))                  #7
+                lst.append(str(f'{v["loss"]:.7f}'))                 #8
+                lst.append(str(f'{v["acc"]:.7f}'))                  #9
+                lst.append(str(f'{v["val_loss"]:.7f}'))             #10
+                lst.append(str(f'{v["val_acc"]:.7f}'))              #11
                 lst.append(str(f'"{v["memo"]}"'))                   #12
                 file.write(",".join(lst) + "\n")
         self.base = path.split("/")[-1]
