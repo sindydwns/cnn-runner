@@ -35,6 +35,7 @@ class Runner(torch.nn.Module):
         self.base = empty_file_name
         self.default_dir = default_dir
         self.record_file_path = default_dir + "/training_records.csv"
+        self.loaded_lr = 0
         if not os.path.exists(default_dir):
             os.makedirs(default_dir)
 
@@ -132,8 +133,8 @@ class Runner(torch.nn.Module):
                 lst.append(str(f'"{v["model"]}"'))                  #3
                 lst.append(str(f'{v["criterion"]}'))                #4
                 lst.append(str(f'{v["optimizer"]}'))                #5
-                lst.append(str(f'{v["lr"]:.5}'))                    #6
-                lst.append(str(f'{v["epoch"]:5}'))                  #7
+                lst.append(str(f'{v["lr"]:.5f}'))                    #6
+                lst.append(str(f'{v["epoch"]:5f}'))                  #7
                 lst.append(str(f'{v["loss"]:.5f}'))                 #8
                 lst.append(str(f'{v["acc"]:.5f}'))                  #9
                 lst.append(str(f'{v["val_loss"]:.5f}'))             #10
@@ -170,6 +171,15 @@ class Runner(torch.nn.Module):
                     self.counter =  counter if self.counter < counter else self.counter
         except:
             self.counter = 0
+        try:
+            with open(self.record_file_path, "r") as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    self.loaded_lr = float(row[6])
+        except:
+            self.loaded_lr = 0
+
+                
 
 
 
