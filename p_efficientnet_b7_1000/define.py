@@ -11,10 +11,11 @@ def image_norm():
 def transform():
     mean, std = image_norm()
     return transforms.Compose([
-    transforms.Resize(224),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=mean, std=std),
-])
+        transforms.Resize(224),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=mean, std=std),
+    ])
 
 def create_model():
     model = models.efficientnet_b7(weights=torchvision.models.EfficientNet_B7_Weights.DEFAULT)
