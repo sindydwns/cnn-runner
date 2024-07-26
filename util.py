@@ -175,6 +175,8 @@ class Runner(torch.nn.Module):
             with open(self.record_file_path, "r") as file:
                 reader = csv.reader(file)
                 for row in reader:
+                    if row[6] == "lr":
+                        continue
                     self.loaded_lr = float(row[6])
         except:
             self.loaded_lr = 0
