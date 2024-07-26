@@ -10,6 +10,16 @@ import time
 
 empty_file_name = "__________________________"
 
+class Schedule():
+    def on_event_start(self, runner):
+        pass
+    def is_end(self, runner) -> bool:
+        return True
+    def on_event_end_epoch(self, runner):
+        pass
+    def get_record(self, runner) -> dict:
+        return {}
+
 class Runner(torch.nn.Module):
     def __init__(self, model, device=None, default_dir="store"):
         super(Runner, self).__init__()
@@ -55,15 +65,16 @@ class Runner(torch.nn.Module):
         return loss_total / len(train_data), corr / total
     
     def run(self,
-            criterion: torch.nn.Module,
-            optimizer: torch.optim.Optimizer,
             train_data: Iterator[tuple[torch.Tensor, torch.Tensor]],
             test_data: Iterator[tuple[torch.Tensor, torch.Tensor]],
-            epochs: int = 1,
+            schedule: Schedule,
             record: dict = {}):
-        for epoch in range(epochs):
-            loss, acc = self._train_one_epoch(criterion, optimizer, train_data)
-            val_loss, val_acc = self.test(test_data, criterion)
+        self.criterion = None
+        self.optimizer = None
+        schedule.on_event_start(self)
+        while schedule.is_end(self) == False:
+            loss, acc = self._train_one_epoch(self.criterion, self.optimizer, train_data)
+            val_loss, val_acc = self.test(test_data, self.criterion)
             self.writer.add_scalar('Train/Loss', loss, self.counter)
             self.writer.add_scalar('Train/Acc', acc, self.counter)
             self.writer.add_scalar('Valid/Loss', val_loss, self.counter)
@@ -71,15 +82,16 @@ class Runner(torch.nn.Module):
             self.counter += 1
             self.learn.append({
                 "epoch": self.counter,
-                "criterion": type(criterion).__name__,
-                "optimizer": type(optimizer).__name__,
-                "loss": math.floor(loss * 100000) / 100000,
-                "acc": math.floor(acc * 100000) / 100000,
-                "val_loss": math.floor(val_loss * 100000) / 100000,
-                "val_acc": math.floor(val_acc * 100000) / 100000,
-            } | record)
-            print(f"epoch: {epoch + 1}; loss: {loss:.5f}; acc: {acc:.5f}; val_loss: {val_loss:.5f}; val_acc: {val_acc:.5f}")
+                "criterion": type(self.criterion).__name__,
+                "optimizer": type(self.optimizer).__name__,
+                "loss": loss,
+                "acc": acc,
+                "val_loss": val_loss,
+                "val_acc": val_acc,
+            } | record | schedule.get_record(self))
+            print(f"epoch: {self.counter}; loss: {loss:.5f}; acc: {acc:.5f}; val_loss: {val_loss:.5f}; val_acc: {val_acc:.5f}")
             time.sleep(1) # 중간에 멈출 수 있게 위해 약간의 시간을 둠
+            schedule.on_event_end_epoch(self)
             
     def test(self,
             iterator: Iterator[tuple[torch.Tensor, torch.Tensor]],
@@ -120,7 +132,7 @@ class Runner(torch.nn.Module):
                 lst.append(str(f'"{v["model"]}"'))                  #3
                 lst.append(str(f'{v["criterion"]}'))                #4
                 lst.append(str(f'{v["optimizer"]}'))                #5
-                lst.append(str(f'{v["lr"]}'))                       #6
+                lst.append(str(f'{v["lr"]:.5}'))                    #6
                 lst.append(str(f'{v["epoch"]:5}'))                  #7
                 lst.append(str(f'{v["loss"]:.5f}'))                 #8
                 lst.append(str(f'{v["acc"]:.5f}'))                  #9
@@ -257,13 +269,3 @@ def show2(
     plt.imshow(img)
     plt.title(title)
     plt.show()
-
-
-
-
-
-############################################################################
-
-
-
-

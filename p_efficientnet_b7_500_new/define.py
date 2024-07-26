@@ -17,9 +17,9 @@ def transform():
 ])
 
 def create_model():
-    model = models.efficientnet_b7(weights=torchvision.models.EfficientNet_B7_Weights.DEFAULT)
+    model = models.efficientnet_b0(weights=torchvision.models.EfficientNet_B0_Weights.DEFAULT)
     model.classifier = nn.Sequential(
-        nn.Linear(2560, 5),
+        nn.Linear(1280, 5),
     )
     return model
 
