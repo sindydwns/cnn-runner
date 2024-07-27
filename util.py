@@ -36,6 +36,8 @@ class Runner(torch.nn.Module):
         self.default_dir = default_dir
         self.record_file_path = default_dir + "/training_records.csv"
         self.loaded_lr = 0
+        self.criterion = None
+        self.optimizer = None
         if not os.path.exists(default_dir):
             os.makedirs(default_dir)
 
@@ -70,8 +72,6 @@ class Runner(torch.nn.Module):
             test_data: Iterator[tuple[torch.Tensor, torch.Tensor]],
             schedule: Schedule,
             record: dict = {}):
-        self.criterion = None
-        self.optimizer = None
         schedule.on_event_start(self)
         while schedule.is_end(self) == False:
             loss, acc = self._train_one_epoch(self.criterion, self.optimizer, train_data)
